@@ -1,12 +1,13 @@
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { AgGridReact } from 'ag-grid-react';
-import React, {  useState } from 'react';
+import React, {  useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Modal } from 'antd';
+import { Button , Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { socket } from './App';
-const MainPage = ({rowData,setRowData}) => {
+const MainPage = ({rowData,setRowData,totalPages,setTotalPages,totalItems,
+setTotalItems,pageSize,setPageSize}) => {
   const navigate=useNavigate();
   const [open, setOpen] = useState(false); 
   const [id,setId]=useState();
@@ -26,6 +27,9 @@ const MainPage = ({rowData,setRowData}) => {
     </Button></div>)
      }},
   ]);
+  useEffect(()=>{
+  setTotalPages(Math.ceil(totalItems/2))
+  },[setTotalPages,totalItems])
 
   const handleOk =async () => {
       navigate('./cruddata',{state:{action:'Add New Data',edit:false}})
@@ -38,7 +42,8 @@ const MainPage = ({rowData,setRowData}) => {
   const handleDelete = async (cur) => {
     setRowData((data)=>data.filter((item) => item.uniqueId !== cur));
     await axios.delete(`http://localhost:8000/grid/deleteGrid/${cur}`);
-    await socket.emit("delete_chat", cur);
+    await socket.emit("delete_chat", pageSize);
+    fetchData(pageSize)
   };
   
  const showModal = (cur) => {
@@ -49,23 +54,62 @@ const MainPage = ({rowData,setRowData}) => {
   const handleOkCancel = () => {
       setOpen(false);
       handleDelete(id);
+      
   };
 
   const handleCancel = () => {
     setOpen(false);
   };
  
-
   
+
+ 
+  const fetchData = async (page) => {
+    try {
+      if(page<1||page>totalPages)
+      return;
+      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${page}&pageSize=${2}`);
+      if(response?.data?.data?.length===0)
+      fetchData(pageSize-1)
+      setRowData(response.data.data);
+      setPageSize(response.data.page.currentPage)
+      setTotalPages(response.data.page.totalPages)
+      setTotalItems(response.data.page.totalItems)
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+ 
   
   return (
     <div>
        <Button className='bg-blue-500' onClick={()=>{handleOk();}}>
         Add Data
       </Button>
-    <div className='h-screen ag-theme-quartz'>
+    <div className='h-48 ag-theme-quartz'>
     
-      <AgGridReact rowData={rowData} columnDefs={colDefs} />
+    <AgGridReact
+          rowData={rowData}
+          columnDefs={colDefs}
+         
+         
+        />
+         <div style={{ marginTop: '10px' }}>
+         <Button className='bg-green-500' onClick={() => fetchData(pageSize-1)}>
+            Prev Page
+          </Button>
+          <span style={{ marginLeft: '10px' }}>
+            Page {pageSize} of {totalPages}
+          </span>
+          <Button className='bg-green-500' onClick={() => fetchData(pageSize+1)}>
+            Next Page
+          </Button>
+          <span style={{ marginLeft: '10px' }}>
+           Total Items : {totalItems}
+          </span>
+        </div>
+    
   
     </div>
      <Modal

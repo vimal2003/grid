@@ -1,17 +1,31 @@
 const Grid=require('../modals/gridModal');
 
-exports.getGrid=async(_,res)=>{
-  try{
-    const grid=await Grid.find();
-    return res.status(200).json({message:"success",
-  grid})
-  }
-  catch(error){
+exports.getGrid = async (req, res) => {
+    const { page = 1, pageSize = 2 } = req.query;
+  
+    try {
+      const totalItems = await Grid.countDocuments();
+      const totalPages = Math.ceil(totalItems / pageSize);
+  
+      const gridData = await Grid.find().sort({_id:-1})
+        .skip((page - 1) * pageSize)
+        .limit(pageSize);
+  
+      return res.status(200).json({
+        message: 'success',
+        data: gridData,
+        page: {
+          currentPage: parseInt(page),
+          totalPages: totalPages,
+          pageSize: parseInt(pageSize),
+          totalItems: totalItems,
+        },
+      });
+    } catch (error) {
       console.log(error);
-      return res.status(500).send({message:"server error"})
-      
-  }
-}
+      return res.status(500).send({ message: 'server error' });
+    }
+  };
 
 exports.addGrid = async (req, res) => {
     try {

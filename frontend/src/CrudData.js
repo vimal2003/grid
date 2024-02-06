@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { Link, useLocation,useNavigate } from 'react-router-dom';
 import { socket } from './App';
-const CrudData = ({rowData,setRowData}) => {
+const CrudData = ({rowData,setRowData,setTotalItems,pageSize}) => {
     const location = useLocation();
     const navigate=useNavigate();
     const [field,setField]=useState(false);
@@ -16,6 +16,7 @@ const CrudData = ({rowData,setRowData}) => {
         age:'',
         role:''
       })
+      
 
       useEffect(()=>{
         if(data)
@@ -36,16 +37,17 @@ const CrudData = ({rowData,setRowData}) => {
           return;
         }
         setField(false);
-        const data=[...rowData,{...value,uniqueId}];
-      setRowData(data)
+        if(pageSize===1){
+        const data=[{...value,uniqueId},...rowData].slice(0,2);
+      setRowData(data)}
       await axios.post("http://localhost:8000/grid/addGrid",{...value,uniqueId})
-      await socket.emit("add_chat",{...value,uniqueId})
+      await socket.emit("add_chat",{...value,uniqueId},pageSize)
       setValue({name:'',email:'',age:'',role:''})
+      setTotalItems(prev=>prev+1);
       navigate('/')
       }
       
       const handleEditOk=async()=>{
-       
         const data = [...rowData]; 
         await socket.emit("edit_chat",value)
          const index = data.findIndex((a) => a.uniqueId === id); 
@@ -88,3 +90,4 @@ const CrudData = ({rowData,setRowData}) => {
 }
 
 export default CrudData
+

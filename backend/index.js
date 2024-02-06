@@ -23,8 +23,8 @@ const io=new Server(server,{
 io.on("connection",(socket)=>{
     console.log(`user connected: ${socket.id}`)
 
-    socket.on("add_chat",(data)=>{
-        socket.broadcast.emit("add_chat",data);
+    socket.on("add_chat",(data,page)=>{
+        socket.broadcast.emit("add_chat",data,page);
     })
 
     socket.on("edit_chat",(data)=>{

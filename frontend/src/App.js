@@ -7,24 +7,30 @@ import io from 'socket.io-client'
 export const socket=io.connect("http://localhost:8000")
 function App() {
   const [rowData,setRowData] = useState([]);
+  const [totalPages,setTotalPages]=useState(0);
+  const [totalItems,setTotalItems]=useState(0);
+  const [pageSize,setPageSize]=useState(1);
   useEffect(()=>{
     const getData=async()=>{
-    const res= await axios.get("http://localhost:8000/grid/getGrid")
-   
-    setRowData(res.data.grid)
+      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${1}&pageSize=${2}`);
+      setRowData(response.data.data);
+      setTotalPages(response.data.page.totalPages)
+      setTotalItems(response.data.page.totalItems)
     }
     getData();
   },[])
   useEffect(()=>{
-    const message=(data)=>{
-     setRowData((prev)=>[...prev,data])
+    const message=(data,page)=>{
+      if(page===1)
+     setRowData((prev)=>[data,...prev].slice(0,2))
+     setTotalItems(prev=>prev+1)
     }
     socket.on("add_chat", message);
    
     return () => {
         socket.off("add_chat", message);
     };
-  },[setRowData])
+  },[setRowData,pageSize])
   useEffect(()=>{
     const message=(data)=>{
 const newData=[...rowData]
@@ -44,24 +50,36 @@ const newData=[...rowData]
   },[rowData,setRowData])
 
   useEffect(() => {
-    const message = (cur) => {
-      const data = [...rowData];
-      console.log(cur)
-      const updatedData = data.filter((item) => item.uniqueId !== cur);
-      setRowData(updatedData);
+    const message = (page) => {
+    const fetchData=async(count)=>{
+      setTotalPages(prev=>prev-1)
+      if(count<1||count>totalPages)
+      return;
+      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${count}&pageSize=${2}`);
+      if(response?.data?.data?.length===0)
+      fetchData(count-1)
+      setRowData(response.data.data);
+      setPageSize(response.data.page.currentPage)
+      setTotalPages(response.data.page.totalPages)
+      setTotalItems(response.data.page.totalItems)
+    }
+    fetchData(page);
     };
     socket.on("delete_chat", message);
   
     return () => {
       socket.off("delete_chat", message);
     };
-  }, [rowData,setRowData]);
+  }, [rowData,setRowData,pageSize,totalPages]);
   
   return (
     <BrowserRouter>
   <Routes>
-  <Route path='/'element={<MainPage rowData={rowData} setRowData={setRowData}/>}/>
-  <Route path='/cruddata'element={<CrudData rowData={rowData} setRowData={setRowData}/>}/>
+  <Route path='/'element={<MainPage rowData={rowData} setRowData={setRowData}
+  totalPages={totalPages} setTotalPages={setTotalPages} totalItems={totalItems}
+  setTotalItems={setTotalItems} pageSize={pageSize} setPageSize={setPageSize}/>}/>
+  <Route path='/cruddata'element={<CrudData rowData={rowData} setRowData={setRowData}
+  setTotalItems={setTotalItems} pageSize={pageSize}/>}/>
   </Routes>
   </BrowserRouter>
   )
