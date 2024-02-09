@@ -3,12 +3,18 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { Link, useLocation,useNavigate } from 'react-router-dom';
 import { socket } from './App';
-const CrudData = ({rowData,setRowData,setTotalItems,pageSize}) => {
+import { useDispatch } from 'react-redux';
+import { addGrid, editGrid } from './app/gridSlice';
+import {  toast,ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) => {
+ 
     const location = useLocation();
     const navigate=useNavigate();
+    const dispatch=useDispatch();
     const [field,setField]=useState(false);
-    const {action,edit,data}=location?.state
-    const id=data?.uniqueId;
+    const {action,edit}=location?.state
+    const id=val?.uniqueId;
     const uniqueId = uuidv4();
     const [value,setValue]=useState({
         name:'',
@@ -16,12 +22,28 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize}) => {
         age:'',
         role:''
       })
-      
-
+     
       useEffect(()=>{
-        if(data)
-        setValue(data)
-      },[data])
+        if(id===iid&&iid!==''){
+          setIid('')
+          toast.error("This data has been deleted", {
+            autoClose: 2000,
+            onClose: () => {
+                navigate('/');
+            }
+        });
+  
+      }
+        if(val&&action==='Edit Data')
+        setValue(val)
+      else
+      setValue({
+        name:'',
+        email:'',
+        age:'',
+        role:''
+      })
+      },[val,action,id,iid,setIid,navigate])
    
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -40,6 +62,7 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize}) => {
         if(pageSize===1){
         const data=[{...value,uniqueId},...rowData].slice(0,2);
       setRowData(data)}
+      dispatch(addGrid({...value,uniqueId}))
       await axios.post("http://localhost:8000/grid/addGrid",{...value,uniqueId})
       await socket.emit("add_chat",{...value,uniqueId},pageSize)
       setValue({name:'',email:'',age:'',role:''})
@@ -54,8 +77,8 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize}) => {
          if (index >= 0) {
            data[index] = { ...data[index], ...value };
          }
-       
          setRowData(data);
+         dispatch(editGrid(value))
         await axios.patch(`http://localhost:8000/grid/updateGrid/${id}`,{...value})
         setValue({name:'',email:'',age:'',role:''})
         navigate('/')
@@ -66,7 +89,8 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize}) => {
     
   return (
     <div>
-        
+              <ToastContainer className='w-10 h-10'/>
+
         <fieldset className='border border-black w-[50%] mx-auto px-10 mt-10 rounded-3xl'>
         <div className='text-2xl bold text-center'>{action}</div>
         <input name='name' placeholder='Enter Name' value={value.name} onChange={handleChange}
@@ -89,5 +113,5 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize}) => {
   )
 }
 
-export default CrudData
+export default CrudData;
 

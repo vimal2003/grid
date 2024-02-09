@@ -31,8 +31,8 @@ io.on("connection",(socket)=>{
         socket.broadcast.emit("edit_chat",data);
     })
 
-    socket.on("delete_chat",(data)=>{
-        socket.broadcast.emit("delete_chat",data);
+    socket.on("delete_chat",(cur,data)=>{
+        socket.broadcast.emit("delete_chat",cur,data);
     })
 
     socket.on("disconnect",()=>{

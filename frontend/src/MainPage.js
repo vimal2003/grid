@@ -6,11 +6,16 @@ import axios from 'axios';
 import { Button , Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { socket } from './App';
+import { useDispatch,useSelector } from 'react-redux';
+import { newGrid, removeGrid } from './app/gridSlice';
 const MainPage = ({rowData,setRowData,totalPages,setTotalPages,totalItems,
-setTotalItems,pageSize,setPageSize}) => {
+setTotalItems,pageSize,setPageSize,setVal}) => {
   const navigate=useNavigate();
   const [open, setOpen] = useState(false); 
   const [id,setId]=useState();
+  const dispatch=useDispatch()
+  const grid = useSelector((state) => state.grid.grid);
+  console.log(grid)
   const [colDefs] = useState([
     { field: 'name' },
     { field: 'email' },
@@ -32,20 +37,23 @@ setTotalItems,pageSize,setPageSize}) => {
   },[setTotalPages,totalItems])
 
   const handleOk =async () => {
+
       navigate('./cruddata',{state:{action:'Add New Data',edit:false}})
   };
 
   const handleEdit=(data)=>{
-    navigate('./cruddata',{state:{action:'Edit Data',edit:true,data}})
+    setVal(data)
+    navigate('./cruddata',{state:{action:'Edit Data',edit:true}})
   }
 
   const handleDelete = async (cur) => {
+    setTotalItems(prev=>prev-1);
     setRowData((data)=>data.filter((item) => item.uniqueId !== cur));
-    await axios.delete(`http://localhost:8000/grid/deleteGrid/${cur}`);
-    await socket.emit("delete_chat", pageSize);
+    dispatch(removeGrid(cur))
+    await axios.delete(`http://localhost:8000/grid/deleteGrid/${cur}`)
+    await socket.emit("delete_chat",cur, pageSize);
     fetchData(pageSize)
   };
-  
  const showModal = (cur) => {
     setOpen(true);
     setId(cur)
@@ -66,12 +74,28 @@ setTotalItems,pageSize,setPageSize}) => {
  
   const fetchData = async (page) => {
     try {
-      if(page<1||page>totalPages)
+      if((page<1||page>totalPages))
       return;
+    // if(page*2<=allData?.length&&arr.length!==0){
+      
+    //   if(page!==totalPages){
+    //   setRowData(arr.slice((page-1)*2,page*2))
+    //   setPageSize(page)
+    //   return;}
+    //   page=page-1
+    // }
+
+    //   if(page*2<=grid?.length){
+    //   setRowData(grid.slice((page-1)*2,page*2))
+    //   setPageSize(page)
+    //   return;
+    // }
+
       const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${page}&pageSize=${2}`);
       if(response?.data?.data?.length===0)
-      fetchData(pageSize-1)
+      fetchData(page-1)
       setRowData(response.data.data);
+       dispatch(newGrid(response.data.data))
       setPageSize(response.data.page.currentPage)
       setTotalPages(response.data.page.totalPages)
       setTotalItems(response.data.page.totalItems)
