@@ -20,6 +20,7 @@ setTotalItems,pageSize,setPageSize,setVal}) => {
     { field: 'name' },
     { field: 'email' },
     { field: 'age' },
+    {field:'degree'},
     { field: 'role' },
     {field:"Edit",cellRenderer:({data})=>{
       return (<div><Button className='bg-blue-500' onClick={()=>{handleEdit(data)}}>
@@ -92,10 +93,15 @@ setTotalItems,pageSize,setPageSize,setVal}) => {
     // }
 
       const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${page}&pageSize=${2}`);
-      if(response?.data?.data?.length===0)
+      if(response?.data?.data1?.length===0)
       fetchData(page-1)
-      setRowData(response.data.data);
-       dispatch(newGrid(response.data.data))
+      let data = response.data.data1.map((item, index) => ({
+        ...item,
+        ...response.data.data2[index]
+      }));
+      
+      setRowData(data);
+       dispatch(newGrid(data))
       setPageSize(response.data.page.currentPage)
       setTotalPages(response.data.page.totalPages)
       setTotalItems(response.data.page.totalItems)

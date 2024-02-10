@@ -18,8 +18,13 @@ function App() {
   useEffect(()=>{
     const getData=async()=>{
       const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${1}&pageSize=${2}`);
-      setRowData(response.data.data);
-      dispatch(newGrid(response.data.data))
+      let data = response.data.data1.map((item, index) => ({
+        ...item,
+        ...response.data.data2[index]
+      }));
+      
+      setRowData(data);
+      dispatch(newGrid(data))
       setTotalPages(response.data.page.totalPages)
       setTotalItems(response.data.page.totalItems)
     }
@@ -68,9 +73,14 @@ const newData=[...rowData]
       return;
      
       const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${count}&pageSize=${2}`);
-      if(response?.data?.data?.length===0)
+      if(response?.data?.data1?.length===0)
       fetchData(count-1)
-      setRowData(response.data.data);
+      let data = response.data.data1.map((item, index) => ({
+        ...item,
+        ...response.data.data2[index]
+      }));
+      
+        setRowData(data);
       setPageSize(response.data.page.currentPage)
       setTotalPages(response.data.page.totalPages)
       setTotalItems(response.data.page.totalItems)

@@ -20,7 +20,8 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) =>
         name:'',
         email:'',
         age:'',
-        role:''
+        role:'',
+        degree:''
       })
      
       useEffect(()=>{
@@ -41,7 +42,8 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) =>
         name:'',
         email:'',
         age:'',
-        role:''
+        role:'',
+        degree:''
       })
       },[val,action,id,iid,setIid,navigate])
    
@@ -65,7 +67,7 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) =>
       dispatch(addGrid({...value,uniqueId}))
       await axios.post("http://localhost:8000/grid/addGrid",{...value,uniqueId})
       await socket.emit("add_chat",{...value,uniqueId},pageSize)
-      setValue({name:'',email:'',age:'',role:''})
+      setValue({name:'',email:'',age:'',role:'',degree:''})
       setTotalItems(prev=>prev+1);
       navigate('/')
       }
@@ -80,7 +82,7 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) =>
          setRowData(data);
          dispatch(editGrid(value))
         await axios.patch(`http://localhost:8000/grid/updateGrid/${id}`,{...value})
-        setValue({name:'',email:'',age:'',role:''})
+        setValue({name:'',email:'',age:'',role:'',degree:''})
         navigate('/')
          }
        
@@ -100,6 +102,8 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) =>
         <input name='age' placeholder='Enter age' value={value.age} onChange={handleChange}
         className='border border-black mb-4 h-10 w-full rounded-lg'/><br/>
         <input name='role' placeholder='Enter Role' value={value.role} onChange={handleChange}
+        className='border border-black mb-4 h-10 w-full rounded-lg'/>
+         <input name='degree' placeholder='Enter Degree' value={value.degree} onChange={handleChange}
         className='border border-black mb-4 h-10 w-full rounded-lg'/>
         <div className='pb-2 text-red-600'>{field?'All field are required':''}</div>
         <div className='mb-2'>  
