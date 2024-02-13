@@ -2,7 +2,7 @@ const Grid=require('../modals/gridModal');
 const Job=require('../modals/jobModal');
 
 exports.getGrid = async (req, res) => {
-    const { page = 1, pageSize = 2 } = req.query;
+    const { page = 1, pageSize } = req.query;
   
     try {
       const totalItems = await Grid.countDocuments();
@@ -11,14 +11,18 @@ exports.getGrid = async (req, res) => {
       const gridData = await Grid.find().sort({_id:-1})
         .skip((page - 1) * pageSize)
         .limit(pageSize);
-        const jobData = await Job.find().sort({_id:-1})
-        .skip((page - 1) * pageSize)
-        .limit(pageSize);
+        // const jobData = await Job.find().sort({_id:-1})
+        // .skip((page - 1) * pageSize)
+        // .limit(pageSize);
+        const data = await Promise.all(gridData.map(async (a) => {
+          const jobs = await Job.findOne({ userId: a._id });
+          return {  ...jobs._doc,...a._doc };
+      }));
   
       return res.status(200).json({
         message: 'success',
-        data1: gridData,
-        data2:jobData,
+        data1: data,
+        //data2:jobData,
         page: {
           currentPage: parseInt(page),
           totalPages: totalPages,
@@ -42,7 +46,7 @@ exports.addGrid = async (req, res) => {
                name,email,age,uniqueId
             });
             const newJob=await Job.create({
-              role,degree,uniqueId
+              role,degree,userId:newChat._id
            });
             
             return res.status(200).json({ ch:{ ...newChat,...newJob} });
@@ -64,7 +68,7 @@ exports.addGrid = async (req, res) => {
         }
 
         const existingGrid = await Grid.findOne({uniqueId});
-        const existingJob = await Job.findOne({uniqueId});
+        const existingJob = await Job.findOne({userId:existingGrid._id});
         //console.log(existingGrid)
         if (!existingGrid||!existingJob) {
             return res.status(404).json({ message: "Grid not found" });
@@ -95,7 +99,7 @@ exports.deleteGrid = async (req, res) => {
       }
       const uniqueId=id;
       const data=await Grid.findOne({uniqueId})
-      const job=await Job.findOne({uniqueId})
+      const job=await Job.findOne({userId:data._id})
       const deletedGrid = await Grid.findByIdAndDelete(data._id);
       const deletedJob = await Job.findByIdAndDelete(job._id);
 

@@ -8,7 +8,7 @@ const jobSchema=new mongoose.Schema({
     degree:{
       type:String
     },
-    uniqueId:{
+    userId:{
         type:String
     }
 })

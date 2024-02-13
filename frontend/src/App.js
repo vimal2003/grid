@@ -11,22 +11,21 @@ function App() {
   const [rowData,setRowData] = useState([]);
   const [totalPages,setTotalPages]=useState(0);
   const [totalItems,setTotalItems]=useState(0);
-  const [pageSize,setPageSize]=useState(1);
+  const [pageSize,setPageSize]=useState(0);
   const [val,setVal]=useState();
   const [id,setId]=useState('');
-  const dispatch=useDispatch()
+  const dispatch=useDispatch();
+  const numberOfRows=2;
   useEffect(()=>{
     const getData=async()=>{
-      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${1}&pageSize=${2}`);
-      let data = response.data.data1.map((item, index) => ({
-        ...item,
-        ...response.data.data2[index]
-      }));
+      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${1}&pageSize=${numberOfRows}`);
+      let data = response.data.data1;
       
       setRowData(data);
       dispatch(newGrid(data))
-      setTotalPages(response.data.page.totalPages)
-      setTotalItems(response.data.page.totalItems)
+      setPageSize(data?.length!==0?1:0);
+      setTotalPages(response?.data?.page?.totalPages)
+      setTotalItems(response?.data?.page?.totalItems)
     }
     getData();
   },[dispatch])
@@ -34,7 +33,7 @@ function App() {
     const message=(data,page)=>{
       dispatch(addGrid(data))
       if(page===1)
-     setRowData((prev)=>[data,...prev].slice(0,2))
+     setRowData((prev)=>[data,...prev].slice(0,numberOfRows))
      setTotalItems(prev=>prev+1)
     }
     socket.on("add_chat", message);
@@ -72,7 +71,7 @@ const newData=[...rowData]
       if(count<1||count>totalPages)
       return;
      
-      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${count}&pageSize=${2}`);
+      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${count}&pageSize=${numberOfRows}`);
       if(response?.data?.data1?.length===0)
       fetchData(count-1)
       let data = response.data.data1.map((item, index) => ({
@@ -102,11 +101,11 @@ const newData=[...rowData]
   <Route path='/'element={<MainPage rowData={rowData} setRowData={setRowData}
   totalPages={totalPages} setTotalPages={setTotalPages} totalItems={totalItems}
   setTotalItems={setTotalItems} pageSize={pageSize} setPageSize={setPageSize} 
-  setVal={setVal} />}/>
+  setVal={setVal} numberOfRows={numberOfRows}/>}/>
 
   <Route path='/cruddata'element={<CrudData rowData={rowData} setRowData={setRowData}
   setTotalItems={setTotalItems} pageSize={pageSize} val={val}
- iid={id} setIid={setId}/>}/>
+ iid={id} setIid={setId} numberOfRows={numberOfRows}/>}/>
 
   </Routes>
   </BrowserRouter>

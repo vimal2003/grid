@@ -7,7 +7,8 @@ import { useDispatch } from 'react-redux';
 import { addGrid, editGrid } from './app/gridSlice';
 import {  toast,ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) => {
+const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid,
+numberOfRows}) => {
  
     const location = useLocation();
     const navigate=useNavigate();
@@ -62,7 +63,7 @@ const CrudData = ({rowData,setRowData,setTotalItems,pageSize,val,iid,setIid}) =>
         }
         setField(false);
         if(pageSize===1){
-        const data=[{...value,uniqueId},...rowData].slice(0,2);
+        const data=[{...value,uniqueId},...rowData].slice(0,numberOfRows);
       setRowData(data)}
       dispatch(addGrid({...value,uniqueId}))
       await axios.post("http://localhost:8000/grid/addGrid",{...value,uniqueId})

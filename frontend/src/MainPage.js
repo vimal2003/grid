@@ -9,13 +9,13 @@ import { socket } from './App';
 import { useDispatch,useSelector } from 'react-redux';
 import { newGrid, removeGrid } from './app/gridSlice';
 const MainPage = ({rowData,setRowData,totalPages,setTotalPages,totalItems,
-setTotalItems,pageSize,setPageSize,setVal}) => {
+setTotalItems,pageSize,setPageSize,setVal,numberOfRows}) => {
   const navigate=useNavigate();
   const [open, setOpen] = useState(false); 
   const [id,setId]=useState();
   const dispatch=useDispatch()
   const grid = useSelector((state) => state.grid.grid);
-  console.log(grid)
+  console.log(grid,'3')
   const [colDefs] = useState([
     { field: 'name' },
     { field: 'email' },
@@ -34,11 +34,10 @@ setTotalItems,pageSize,setPageSize,setVal}) => {
      }},
   ]);
   useEffect(()=>{
-  setTotalPages(Math.ceil(totalItems/2))
-  },[setTotalPages,totalItems])
+  setTotalPages(Math.ceil(totalItems/numberOfRows))
+  },[setTotalPages,totalItems,numberOfRows])
 
   const handleOk =async () => {
-
       navigate('./cruddata',{state:{action:'Add New Data',edit:false}})
   };
 
@@ -53,7 +52,7 @@ setTotalItems,pageSize,setPageSize,setVal}) => {
     dispatch(removeGrid(cur))
     await axios.delete(`http://localhost:8000/grid/deleteGrid/${cur}`)
     await socket.emit("delete_chat",cur, pageSize);
-    fetchData(pageSize)
+    getData(pageSize)
   };
  const showModal = (cur) => {
     setOpen(true);
@@ -69,39 +68,29 @@ setTotalItems,pageSize,setPageSize,setVal}) => {
   const handleCancel = () => {
     setOpen(false);
   };
- 
+ const getData=(val)=>{
+     fetchData(val)
+  
+ }
   
 
- 
   const fetchData = async (page) => {
     try {
       if((page<1||page>totalPages))
       return;
-    // if(page*2<=allData?.length&&arr.length!==0){
-      
-    //   if(page!==totalPages){
-    //   setRowData(arr.slice((page-1)*2,page*2))
-    //   setPageSize(page)
-    //   return;}
-    //   page=page-1
-    // }
 
-    //   if(page*2<=grid?.length){
+    //   if(page*2<=grid?.length||grid.slice((page-1)*2,page*2).length!==0){
     //   setRowData(grid.slice((page-1)*2,page*2))
     //   setPageSize(page)
     //   return;
     // }
 
-      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${page}&pageSize=${2}`);
+      const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${page}&pageSize=${numberOfRows}`);
       if(response?.data?.data1?.length===0)
-      fetchData(page-1)
-      let data = response.data.data1.map((item, index) => ({
-        ...item,
-        ...response.data.data2[index]
-      }));
-      
+      getData(page-1)
+      let data = response.data.data1;
+      dispatch(newGrid(data))
       setRowData(data);
-       dispatch(newGrid(data))
       setPageSize(response.data.page.currentPage)
       setTotalPages(response.data.page.totalPages)
       setTotalItems(response.data.page.totalItems)
@@ -117,22 +106,22 @@ setTotalItems,pageSize,setPageSize,setVal}) => {
        <Button className='bg-blue-500' onClick={()=>{handleOk();}}>
         Add Data
       </Button>
-    <div className='h-48 ag-theme-quartz'>
+    <div className='ag-theme-quartz'>
     
-    <AgGridReact
+    <AgGridReact 
           rowData={rowData}
           columnDefs={colDefs}
-         
+          domLayout='autoHeight'
          
         />
          <div style={{ marginTop: '10px' }}>
-         <Button className='bg-green-500' onClick={() => fetchData(pageSize-1)}>
+         <Button className='bg-green-500' onClick={() => getData(pageSize-1)}>
             Prev Page
           </Button>
           <span style={{ marginLeft: '10px' }}>
             Page {pageSize} of {totalPages}
           </span>
-          <Button className='bg-green-500' onClick={() => fetchData(pageSize+1)}>
+          <Button className='bg-green-500' onClick={() => getData(pageSize+1)}>
             Next Page
           </Button>
           <span style={{ marginLeft: '10px' }}>

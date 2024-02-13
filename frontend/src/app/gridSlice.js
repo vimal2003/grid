@@ -10,7 +10,7 @@ const gridSlice = createSlice({
   reducers: {
     newGrid(state, action) {
       
-      state.grid=[...state?.grid,...action.payload];
+      state.grid=[...state?.grid,...action?.payload];
     },
     removeGrid(state,action){
      const id=action.payload;
