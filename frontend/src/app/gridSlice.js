@@ -9,25 +9,19 @@ const gridSlice = createSlice({
   initialState,
   reducers: {
     newGrid(state, action) {
-      
-      state.grid=[...state?.grid,...action?.payload];
+      state.grid = [...state.grid, ...action.payload];
     },
-    removeGrid(state,action){
-     const id=action.payload;
-     const delIndex=state.grid.findIndex((i)=>i.uniqueId===id)
-     state.grid.splice(delIndex,1);
+    removeGrid(state, action) {
+      const id = action.payload;
+      state.grid = state.grid.filter(item => item.uniqueId !== id);
     },
-    addGrid(state,action){
-      state.grid.unshift(action.payload)
+    addGrid(state, action) {
+      state.grid.unshift(action.payload);
     },
-    editGrid(state,action){
-      
-      const data = [...state.grid]; 
-         const index = data.findIndex((a) => a.uniqueId === action.payload.uniqueId); 
-         if (index >= 0) {
-           data[index] = { ...data[index], ...action.payload };
-         }
-         state.grid=data
+    editGrid(state, action) {
+      state.grid = state.grid.map(item => 
+        item.uniqueId === action.payload.uniqueId ? { ...item, ...action.payload } : item
+      );
     }
   },
 });

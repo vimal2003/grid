@@ -53,6 +53,7 @@ setTotalItems,pageSize,setPageSize,setVal,numberOfRows}) => {
     await axios.delete(`http://localhost:8000/grid/deleteGrid/${cur}`)
     await socket.emit("delete_chat",cur, pageSize);
     getData(pageSize)
+    
   };
  const showModal = (cur) => {
     setOpen(true);
@@ -70,7 +71,7 @@ setTotalItems,pageSize,setPageSize,setVal,numberOfRows}) => {
   };
  const getData=(val)=>{
      fetchData(val)
-  
+   
  }
   
 
@@ -91,6 +92,7 @@ setTotalItems,pageSize,setPageSize,setVal,numberOfRows}) => {
       let data = response.data.data1;
       dispatch(newGrid(data))
       setRowData(data);
+      console.log(grid)
       setPageSize(response.data.page.currentPage)
       setTotalPages(response.data.page.totalPages)
       setTotalItems(response.data.page.totalItems)
@@ -153,3 +155,8 @@ setTotalItems,pageSize,setPageSize,setVal,numberOfRows}) => {
 };
 
 export default MainPage;
+
+
+
+
+

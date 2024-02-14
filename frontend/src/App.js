@@ -74,12 +74,8 @@ const newData=[...rowData]
       const response = await axios.get(`http://localhost:8000/grid/getGrid?page=${count}&pageSize=${numberOfRows}`);
       if(response?.data?.data1?.length===0)
       fetchData(count-1)
-      let data = response.data.data1.map((item, index) => ({
-        ...item,
-        ...response.data.data2[index]
-      }));
-      
-        setRowData(data);
+      let data = response.data.data1
+      setRowData(data);
       setPageSize(response.data.page.currentPage)
       setTotalPages(response.data.page.totalPages)
       setTotalItems(response.data.page.totalItems)
